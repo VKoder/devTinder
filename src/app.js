@@ -1,38 +1,18 @@
 const express = require('express')
-
+const { adminAuth, userAuth } = require('./middlewares/auth')
 const app = express();
 
-// This will handle just get call to /user path
+app.use('/admin', adminAuth)
 
-// : means dynamic route if api accepts //
-// app.get('/user/:userId/:name', (req, res)=>{
-//     console.log(req.params)
-//     res.send('Get user data')
-// })
-
-
-// if api expects ?
-app.get('/user', (req, res)=>{
-    console.log(req.query)
-    res.send('Get user data')
+app.get('/admin', (req, res) => {
+    res.send('If user is authticated then only it will work')
 })
 
-app.post('/user', (req, res)=>{
-    // logic of posting data to db 
-    res.send('Post data to DB')
+app.use('/user', userAuth, (req, res) => {
+    console.log('This is user request')
+    res.send('Send the user data')
 })
 
-app.delete('/user', (req, res)=>{
-    // logic of deleting data from db 
-    res.send('Deleted data from DB')
-})
-
-
-// This will match all the HTTP method API calls to /test
-app.use('/test',(req, res)=>{
-    res.send('This is running on /test path')
-})
-
-app.listen(7777, ()=>{
-    console.log('Will call this listen at the end and it will call....The server is running on 7777 successfully...')
+app.listen(7777, () => {
+    console.log('The server is successfully running on 7777....')
 })
