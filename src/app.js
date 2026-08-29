@@ -3,7 +3,17 @@ const express = require('express')
 const app = express();
 
 // This will handle just get call to /user path
+
+// : means dynamic route if api accepts //
+// app.get('/user/:userId/:name', (req, res)=>{
+//     console.log(req.params)
+//     res.send('Get user data')
+// })
+
+
+// if api expects ?
 app.get('/user', (req, res)=>{
+    console.log(req.query)
     res.send('Get user data')
 })
 
@@ -11,7 +21,6 @@ app.post('/user', (req, res)=>{
     // logic of posting data to db 
     res.send('Post data to DB')
 })
-
 
 app.delete('/user', (req, res)=>{
     // logic of deleting data from db 
@@ -25,5 +34,5 @@ app.use('/test',(req, res)=>{
 })
 
 app.listen(7777, ()=>{
-    console.log('The server is running on 7777 successfully...')
+    console.log('Will call this listen at the end and it will call....The server is running on 7777 successfully...')
 })
