@@ -3,14 +3,16 @@ const connectDB = require('./config/database')
 const { userModel } = require('./models/user')
 const app = express()
 
+
+// a middleware which will use for all the apis
+// Description : convert the request to readable js object and adds the object into .body 
+app.use('/', express.json());
+
 // making post call to singup the user
 app.post('/signup', async (req, res) => {
     // Creating a new instance of the user modal
-    const user = new userModel({
-        firstName: 'Vivek',
-        lastName: 'Khule',
-        emailId: 'test@124'
-    })
+    console.log(req.body)
+    const user = new userModel(req.body)
     // Always wrap db operations with try/catch
     try {
         await user.save();
