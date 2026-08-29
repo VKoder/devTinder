@@ -1,23 +1,33 @@
 const express = require('express')
+const connectDB = require('./config/database')
+const { userModel } = require('./models/user')
 const app = express()
 
-app.use('/', (req, res) => {
+// making post call to singup the user
+app.post('/signup', async (req, res) => {
+    // Creating a new instance of the user modal
+    const user = new userModel({
+        firstName: 'Vivek',
+        lastName: 'Khule',
+        emailId: 'test@124'
+    })
+    // Always wrap db operations with try/catch
     try {
-        throw new Error('Error')
-        res.send('Sent')
+        await user.save();
+        res.send('User logged in successfully')
     }
     catch (err) {
-        res.status(500).send('Handled error')
+        res.status(400).send('Error saving the user', err.message);
     }
 })
 
-
-// can write like this in the end to handle the error but always use try catch
-app.use('/', (err, req, res, next)=>{
-    if(err){ 
-        res.status(500).send('Handled error')
-    }
-})
-app.listen(7777, () => {
-    console.log('Running successfully on port 7777....')
-})
+connectDB()
+    .then(() => {
+        console.log('Success');
+        app.listen(7777, () => {
+            console.log('Running successfully on port 7777....')
+        })
+    })
+    .catch((err) => {
+        console.error(err)
+    })
