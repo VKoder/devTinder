@@ -23,8 +23,8 @@ app.post('/signup', async (req, res) => {
     }
 })
 
-
-app.get('/user', async (req, res) => {
+// find all the emails find() will send in arry of obj
+app.get('/users', async (req, res) => {
     const userEmail = req.body.emailId;
     try {
         const users = await userModel.find({
@@ -42,6 +42,30 @@ app.get('/user', async (req, res) => {
         res.status(400).send('Something went wrg')
     }
 })
+
+
+
+// Returns one matching user as an object, but findOne() does not guarantee it is the oldest.
+// To guarantee the oldest user, the schema must include createdAt and the query must sort by it ascending.
+app.get('/user', async (req, res) => {
+    const userEmail = req.body.emailId;
+    try {
+        const user = await userModel.findOne({
+            emailId: userEmail
+        })
+        // as its not an array its just an object
+        if (!user) {
+            res.status(404).send('User not found')
+        }
+        else {
+            res.send(user)
+        }
+    }
+    catch (err) {
+        res.status(400).send('Something went wrg')
+    }
+})
+
 app.get('/feed', async (req, res) => {
     try {
         const users = await userModel.find({})
