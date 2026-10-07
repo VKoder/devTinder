@@ -1,4 +1,8 @@
 node_modules
+.env
+.env.*
+!.env.example
 episode4.txt
 epi4Hw.txt
 epi4HwErrorhandling.txt
+src/config/database.js
