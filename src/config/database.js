@@ -1,11 +1,10 @@
 const mongoose = require('mongoose')
 
-const DB_NAME = 'devTinderrrr'
-
+// way to connect with db cluster which we've created in atlas
+// as its a asyns task need to wrap it in async await
 const connectDB = async () => {
-    const uri = `mongodb://vivekkhule07_db_user:C0DY7NfH76ZPBWPz@ac-kegkz5q-shard-00-00.n5ssqna.mongodb.net:27017,ac-kegkz5q-shard-00-01.n5ssqna.mongodb.net:27017,ac-kegkz5q-shard-00-02.n5ssqna.mongodb.net:27017/${DB_NAME}?ssl=true&replicaSet=atlas-7hl6hf-shard-0&authSource=admin&appName=devTinder-Cluster`
-
-    await mongoose.connect(uri)
+    const uri = `mongodb+srv://vivekkhule204_db_user:slVPu7bSxDgz5Zj6@devtinder.8swjnp9.mongodb.net/`
+    await mongoose.connect(`${uri}devtinder`)
     console.log(`MongoDB connected to database: ${mongoose.connection.name}`)
 }
 
