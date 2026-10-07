@@ -66,15 +66,20 @@ app.get('/user', async (req, res) => {
     }
 })
 
-// delete
-app.delete('/user', async (req, res)=>{
-    const userId = req.body._id;
-    try{
-        const user = await userModel.findByIdAndDelete(userId)
+// Delete a user by ID from the request body: DELETE /user
+app.delete('/user/', async (req, res) => {
+    const userId = req.body._id
+    try {
+        const deletedUser = await userModel.findByIdAndDelete(userId)
+
+        if (!deletedUser) {
+            return res.status(404).send('User not found')
+        }
+
         res.send('User deleted successfully')
     }
-    catch(err){
-        res.status(400).send('Something went wrg')
+    catch (err) {
+        res.status(400).send('Invalid user ID')
     }
 })
 
