@@ -70,6 +70,7 @@ app.get('/user', async (req, res) => {
 app.delete('/user/', async (req, res) => {
     const userId = req.body._id
     try {
+        // can delete it like this as well findOneAndDelete({ _id: id }).
         const deletedUser = await userModel.findByIdAndDelete(userId)
 
         if (!deletedUser) {
@@ -82,6 +83,57 @@ app.delete('/user/', async (req, res) => {
         res.status(400).send('Invalid user ID')
     }
 })
+
+
+app.patch('/user', async(req, res)=>{
+    const userId = req.body._id
+    const data = req.body
+    try{
+        const user = await userModel.findByIdAndUpdate(userId, data)
+        res.send('User updated successfully')
+    }
+    catch(err){
+        res.status(400).send('Something went wrg')
+    }
+})
+
+
+//OPTIMZED 
+
+// app.patch('/user', async (req, res) => {
+//     const { _id, ...updates } = req.body
+
+//     try {
+//         const user = await userModel.findByIdAndUpdate(
+//             _id,
+//             updates,
+//             { new: true, runValidators: true }
+//         )
+
+//         if (!user) {
+//             return res.status(404).send('User not found')
+//         }
+
+//         res.send(user)
+//     } catch (err) {
+//         res.status(400).send('Invalid user data')
+//     }
+// })
+
+
+// PATCH WITH EMAIL  - use findOneAndUpdate 
+
+// app.patch('/user', async(req, res)=>{
+//     const emailId = req.body.emailId
+//     const data = req.body
+//     try{
+//         const user = await userModel.findOneAndUpdate({emailId}, data)
+//         res.send('User updated successfully')
+//     }
+//     catch(err){
+//         res.status(400).send('Something went wrg')
+//     }
+// })
 
 
 app.get('/feed', async (req, res) => {
