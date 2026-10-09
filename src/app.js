@@ -72,23 +72,13 @@ app.post('/login', async (req, res) => {
 })
 
 // find all the emails find() will send in arry of obj
-app.get('/users', async (req, res) => {
+app.get('/users', userAuth, async (req, res) => {
     const userEmail = req.body.emailId;
 
     try {
-        const cookies = req.cookies;
-        console.log(cookies)
-        const {token} = cookies;
-        console.log('tokkkk', token)
-        const isTokenValid = jwt.verify(token,"AIDEV")
-        if (!isTokenValid) {
-            return res.status(401).send('Invalid token')
-        }
-        console.log('cookie',cookies)
         const users = await userModel.find({
             emailId: userEmail
         })
-        console.log('uuu', users)
         // find() will give in array of obj
         if (users.length === 0) {
             res.status(404).send('User not found')
@@ -195,7 +185,7 @@ app.patch('/user', async (req, res) => {
 // })
 
 
-app.get('/feed', async (req, res) => {
+app.get('/feed', userAuth, async (req, res) => {
     try {
         const users = await userModel.find({})
         res.send(users)
