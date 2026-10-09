@@ -1,25 +1,60 @@
 const express = require('express')
 const connectDB = require('./config/database')
 const { userModel } = require('./models/user')
+const validateUserData = require('./utils/validation')
 const app = express()
-
+const bcrypt = require('bcrypt')
+const validator = require('validator')
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
 // Description : convert the request to readable js object and adds the object into .body 
 app.use('/', express.json());
 
 // making post call to singup the user
 app.post('/signup', async (req, res) => {
-    console.log(req.body)
-    // Creating a new instance of the user modal
-    const user = new userModel(req.body)
 
     // Always wrap db operations with try/catch
     try {
+        // validate the data
+        validateUserData(req.body)
+        const { firstName, lastName, emailId, password } = req.body
+        // encrpting the password
+        const hashPassword = await bcrypt.hash(password, 10)
+        const user = new userModel({
+            firstName, lastName, emailId, password: hashPassword
+        })
         await user.save();
         res.send('User logged in successfully')
     }
     catch (err) {
-        res.status(400).send( 'Error saving the user' + err.message);
+        res.status(400).send('Error saving the user' + err.message);
+    }
+})
+
+app.post('/login', async (req, res) => {
+
+    try {
+    
+        const { emailId, password } = req.body
+        // 1st always check that email is correct or not
+        if (!validator.isEmail(emailId)) {
+            throw new Error('Invalid user creds');
+        }
+        // 2nd check the user with that mail is there in db or not 
+        const user = await userModel.findOne({ emailId: emailId })
+        if (!user) {
+            // dont expose that email is valid dont expose ur db details just throw invalid
+            throw new Error('Invalid user creds');
+
+        }
+        // check if the password is correct or not 
+        const isPasswordValid = await bcrypt.compare(password, user.password)
+        if(isPasswordValid){
+        res.send('User  logged in successfully')
+        }else{
+            throw new Error('Invalid user creds')
+        }
+    } catch (err) {
+        res.status(400).send('Invalid creds' + err.message);
     }
 })
 
@@ -85,14 +120,14 @@ app.delete('/user/', async (req, res) => {
 })
 
 
-app.patch('/user', async(req, res)=>{
+app.patch('/user', async (req, res) => {
     const userId = req.body._id
     const data = req.body
-    try{
+    try {
         const user = await userModel.findByIdAndUpdate(userId, data)
         res.send('User updated successfully')
     }
-    catch(err){
+    catch (err) {
         res.status(400).send('Something went wrg')
     }
 })
