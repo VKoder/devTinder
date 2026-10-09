@@ -6,6 +6,7 @@ const app = express()
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 const cookieParcer = require('cookie-parser')
+const jwt = require('jsonwebtoken')
 
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
 // Description : convert the request to readable js object and adds the object into .body 
@@ -38,7 +39,7 @@ app.post('/signup', async (req, res) => {
 app.post('/login', async (req, res) => {
 
     try {
-    
+
         const { emailId, password } = req.body
         // 1st always check that email is correct or not
         if (!validator.isEmail(emailId)) {
@@ -49,13 +50,19 @@ app.post('/login', async (req, res) => {
         if (!user) {
             // dont expose that email is valid dont expose ur db details just throw invalid
             throw new Error('Invalid user creds');
-
         }
         // check if the password is correct or not 
         const isPasswordValid = await bcrypt.compare(password, user.password)
-        if(isPasswordValid){
-        res.send('User  logged in successfully')
-        }else{
+        if (isPasswordValid) {
+            // async func anyday wkt takes user payload and secret key 
+            const token = jwt.sign({_id: user._id}, "AIDEV");
+            console.log('tooken',token)
+
+            // key as token
+            res.cookie('token', token)
+
+            res.send('User  logged in successfully')
+        } else {
             throw new Error('Invalid user creds')
         }
     } catch (err) {
@@ -66,10 +73,21 @@ app.post('/login', async (req, res) => {
 // find all the emails find() will send in arry of obj
 app.get('/users', async (req, res) => {
     const userEmail = req.body.emailId;
+
     try {
+        const cookies = req.cookies;
+        console.log(cookies)
+        const {token} = cookies;
+        console.log('tokkkk', token)
+        const isTokenValid = jwt.verify(token,"AIDEV")
+        if (!isTokenValid) {
+            return res.status(401).send('Invalid token')
+        }
+        console.log('cookie',cookies)
         const users = await userModel.find({
             emailId: userEmail
         })
+        console.log('uuu', users)
         // find() will give in array of obj
         if (users.length === 0) {
             res.status(404).send('User not found')
