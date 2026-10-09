@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt')
 const validator = require('validator')
 const cookieParcer = require('cookie-parser')
 const jwt = require('jsonwebtoken')
+const {userAuth} = require('./middlewares/auth')
 
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
 // Description : convert the request to readable js object and adds the object into .body 
@@ -105,7 +106,7 @@ app.get('/users', async (req, res) => {
 
 // Returns one matching user as an object, but findOne() does not guarantee it is the oldest.
 // To guarantee the oldest user, the schema must include createdAt and the query must sort by it ascending.
-app.get('/user', async (req, res) => {
+app.get('/user', userAuth, async (req, res) => {
     const userEmail = req.body.emailId;
     try {
         const user = await userModel.findOne({
