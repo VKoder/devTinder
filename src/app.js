@@ -5,9 +5,14 @@ const validateUserData = require('./utils/validation')
 const app = express()
 const bcrypt = require('bcrypt')
 const validator = require('validator')
+const cookieParcer = require('cookie-parser')
+
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
 // Description : convert the request to readable js object and adds the object into .body 
-app.use('/', express.json());
+app.use(express.json());
+
+// Makes the cookie into readable format when we do req.cookiee in rh
+app.use(cookieParcer())
 
 // making post call to singup the user
 app.post('/signup', async (req, res) => {
