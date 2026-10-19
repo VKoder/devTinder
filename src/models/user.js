@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator');
-
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -76,7 +77,18 @@ const userSchema = new mongoose.Schema({
             message: 'A user cannot have more than 10 skills'
         }
     }
-}, { timestamps: true })
-// note : model takes model name and schema 
+}, { timestamps: true },
+)
+userSchema.methods.getJwt = async function () {
+    return jwt.sign({ _id: this._id }, 'AIDEV')
+}
+
+userSchema.methods.validatePassword = async function (passwordByUser) {
+    const user = this 
+    const hashPassword = user.password
+     const isPasswordValid = await bcrypt.compare(passwordByUser, hashPassword)
+     return isPasswordValid;
+}
+// note : model takes model name and schema
 const userModel = mongoose.model('user', userSchema)
 module.exports = {userModel}

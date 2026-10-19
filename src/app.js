@@ -53,10 +53,11 @@ app.post('/login', async (req, res) => {
             throw new Error('Invalid user creds');
         }
         // check if the password is correct or not 
-        const isPasswordValid = await bcrypt.compare(password, user.password)
+        const isPasswordValid = await user.validatePassword(password)
+        console.log('pass', isPasswordValid)
         if (isPasswordValid) {
             // async func anyday wkt takes user payload and secret key 
-            const token = jwt.sign({_id: user._id}, "AIDEV");
+            const token = await user.getJwt()
             console.log('tooken',token)
 
             // key as token
