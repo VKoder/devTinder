@@ -83,6 +83,7 @@ userSchema.methods.getJwt = async function () {
     return jwt.sign({ _id: this._id }, 'AIDEV')
 }
 
+
 userSchema.methods.validatePassword = async function (passwordByUser) {
     const user = this 
     const hashPassword = user.password
