@@ -65,15 +65,41 @@ userRouter.delete('/user/', async (req, res) => {
 })
 
 
-userRouter.patch('/user', async (req, res) => {
-    const userId = req.body._id
-    const data = req.body
+userRouter.patch('/user', userAuth, async (req, res) => {
     try {
-        const user = await userModel.findByIdAndUpdate(userId, data)
-        res.send('User updated successfully')
-    }
-    catch (err) {
-        res.status(400).send('Something went wrg')
+        const { emailId, password, firstName, lastName, age, gender, avatar, about, bio, skills } = req.body
+
+        if (emailId !== undefined || password !== undefined) {
+            return res.status(400).send('Email and password cannot be changed through profile updates')
+        }
+
+        if (Object.keys(req.body).length === 0) {
+            return res.status(400).send('At least one profile field is required')
+        }
+
+        const allowedFields = ['firstName', 'lastName', 'age', 'gender', 'avatar', 'about', 'bio', 'skills']
+        const hasUnsupportedField = Object.keys(req.body).some(field => !allowedFields.includes(field) && field !== 'emailId' && field !== 'password')
+        if (hasUnsupportedField) {
+            return res.status(400).send('One or more profile fields cannot be updated')
+        }
+
+        const user = req.user
+        if (firstName !== undefined) user.firstName = firstName
+        if (lastName !== undefined) user.lastName = lastName
+        if (age !== undefined) user.age = age
+        if (gender !== undefined) user.gender = gender
+        if (avatar !== undefined) user.avatar = avatar
+        if (about !== undefined) user.about = about
+        if (bio !== undefined) user.bio = bio
+        if (skills !== undefined) user.skills = skills
+
+        await user.save()
+
+        const profile = user.toObject()
+        delete profile.password
+        return res.status(200).json({ message: 'Profile updated successfully', user: profile })
+    } catch (err) {
+        return res.status(400).send('Unable to update profile: ' + err.message)
     }
 })
 

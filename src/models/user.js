@@ -22,8 +22,8 @@ const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
         trim: true,
-        validate(value){
-            if(!validator.isEmail(value)){
+        validate(value) {
+            if (!validator.isEmail(value)) {
                 throw new Error('Email not valid')
             }
         }
@@ -48,8 +48,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'https://via.placeholder.com/150',
         trim: true,
-        validate(value){
-            if(!validator.isURL(value)){
+        validate(value) {
+            if (!validator.isURL(value)) {
                 throw new Error('Url not valid')
             }
         }
@@ -85,11 +85,11 @@ userSchema.methods.getJwt = async function () {
 
 
 userSchema.methods.validatePassword = async function (passwordByUser) {
-    const user = this 
+    const user = this
     const hashPassword = user.password
-     const isPasswordValid = await bcrypt.compare(passwordByUser, hashPassword)
-     return isPasswordValid;
+    const isPasswordValid = await bcrypt.compare(passwordByUser, hashPassword)
+    return isPasswordValid;
 }
 // note : model takes model name and schema
 const userModel = mongoose.model('user', userSchema)
-module.exports = {userModel}
+module.exports = { userModel }

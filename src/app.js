@@ -4,6 +4,8 @@ const app = express()
 const cookieParcer = require('cookie-parser')
 const {authRouter} = require('./routes/auth')
 const {userRouter} = require('./routes/user')
+const {connectionRequestRouter} = require('./routes/connectionRequest')
+
 
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
 // Description : convert the request to readable js object and adds the object into .body 
@@ -14,8 +16,10 @@ app.use(cookieParcer())
 
 app.use('/', authRouter);
 app.use('/', userRouter)
+app.use('/', connectionRequestRouter)
 
 
+ 
 connectDB()
     .then(() => {
         console.log('DB is Successfully connected and then only will listen or start the server');

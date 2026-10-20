@@ -6,6 +6,7 @@ const { userModel } = require('../models/user')
 const validateUserData = require('../utils/validation')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const {userAuth} = require('../middlewares/auth')
 
 
 
@@ -63,6 +64,37 @@ authRouter.post('/login', async (req, res) => {
         }
     } catch (err) {
         res.status(400).send('Invalid creds' + err.message);
+    }
+})
+
+authRouter.post('/logout', async (req, res) => {
+    res.clearCookie('token').status(200).send('User logged out successfully!')
+})
+
+authRouter.patch('/changePassword', userAuth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body
+
+        if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+            return res.status(400).send('Current password and new password are required')
+        }
+
+        if (!validator.isStrongPassword(newPassword)) {
+            return res.status(400).send('New password must be at least 8 characters and include uppercase, lowercase, number, and symbol')
+        }
+
+        const user = req.user
+        const isCurrentPasswordValid = await user.validatePassword(currentPassword)
+        if (!isCurrentPasswordValid) {
+            return res.status(400).send('Current password is incorrect')
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10)
+        await user.save()
+
+        return res.status(200).send('Password changed successfully')
+    } catch (err) {
+        return res.status(500).send('Unable to change password')
     }
 })
 
