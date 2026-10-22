@@ -22,6 +22,11 @@ const connectionRequestSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
+
+// Compound index - combine / compounding both the key is called as compounding index .... each field can be indexed but we can compound multiple fields
+connectionRequestSchema.index({fromUserId: 1, toUserId : 1})
+
+
 // PRE - is basically a middleware which calls before SAVEing to DB ie its called PRE saved
 // always write normal function when writting method or pre okay!
 connectionRequestSchema.pre("save", function(next){
