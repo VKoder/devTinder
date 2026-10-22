@@ -1,47 +1,73 @@
 const express = require('express');
 const connectionRequestRouter = express.Router();
 
-const {userAuth} = require('../middlewares/auth')
-const {connectionRequestModel} = require('../models/connectionRequest');
+const { userAuth } = require('../middlewares/auth')
+const { connectionRequestModel } = require('../models/connectionRequest');
 const { userModel } = require('../models/user');
 
 connectionRequestRouter.post('/request/:status/:toUserId', userAuth, async (req, res) => {
     try {
-        const allowedStatuses = ['ignored', 'interested']
-        const { status, toUserId } = req.params
-        const user = req.user
 
+        // grabbing all the values
+        const fromUserId = req.user._id;
+        const toUserId = req.params.toUserId
+        const status = req.params.status
+
+        // 1. status check 
+        // 2. userId exists or not 
+        // 3. no existing connection
+        // 4. fromId and userId cant be same
+
+
+        // 1. status check 
+
+        const allowedStatuses = ['ignored', 'interested']
         if (!allowedStatuses.includes(status)) {
             return res.status(400).send('Status is not valid')
         }
 
-        const request = new connectionRequestModel({
-            fromUserId: user._id,
-            toUserId,
-            status
-        })
 
-        // findById returns the matching user document, or null if no user exists.
+        // 2. userId exists or not 
+
         const toUser = await userModel.findById(toUserId)
-        console.log('Recipient lookup:', toUser)
         if (!toUser) {
-            return res.status(404).send('Recipient user not found')
+            return res.status(404).send('User not found')
         }
 
-        // no duplicate request and both cant send to each other 
+
+        
+        // 3. no existing connection - from both sides finding the connection where fromUserId and toUserId and vicaversa
+
         const existingRequest = await connectionRequestModel.findOne({
-            $or: [
-                { fromUserId: user._id, toUserId },
-                { fromUserId: toUserId, toUserId: user._id }
+            $or:[
+                {
+                    fromUserId,toUserId
+                },
+                {
+                    fromUserId:toUserId, toUserId:fromUserId
+                }
             ]
         })
-
-        if (existingRequest) {
+        if(existingRequest){
             return res.status(409).send('A connection request already exists between these users')
         }
 
-       await request.save()
-        res.send('Data added successfully')
+
+        // 4. fromId and userId cant be same - written in schmea as a 'PRE' to understand pre we could write this logic here as well but to understnad the same we did in schema
+
+
+        // Creating instance of connection request modal as request and can later do save
+        const request = new connectionRequestModel({
+            fromUserId, toUserId, status
+        })
+
+
+        await request.save()
+
+        res.json({
+            message: req.user.firstName  + status + toUser.firstName + 'successfully!',
+            request
+        })
     } catch (err) {
         res.status(400).send(err.message)
     }
