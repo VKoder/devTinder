@@ -3,8 +3,9 @@ const connectDB = require('./config/database')
 const app = express()
 const cookieParcer = require('cookie-parser')
 const {authRouter} = require('./routes/auth')
-const {userRouter} = require('./routes/user')
-const {connectionRequestRouter} = require('./routes/connectionRequest')
+const {profileRouter} = require('./routes/profile')
+const {requestRouter} = require('./routes/request')
+const { userRouter } = require('./routes/user')
 
 
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
@@ -15,8 +16,10 @@ app.use(express.json());
 app.use(cookieParcer())
 
 app.use('/', authRouter);
+app.use('/', profileRouter)
+app.use('/', requestRouter)
 app.use('/', userRouter)
-app.use('/', connectionRequestRouter)
+
 
 
  

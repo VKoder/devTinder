@@ -1,144 +1,66 @@
-const express = require('express')
-const userRouter = express.Router()
-const {userAuth} = require('../middlewares/auth')
-const { userModel } = require('../models/user')
+const express = require('express');
+const { userAuth } = require('../middlewares/auth');
+const { connectionRequestModel } = require('../models/connectionRequest');
+const { populate } = require('dotenv');
+const userRouter = express.Router();
 
+const USER_SAFE_FIELDS = "firstName lastName age gender avatar skills about bio"
 
-// find all the emails find() will send in arry of obj
-userRouter.get('/users', userAuth, async (req, res) => {
-    const userEmail = req.body.emailId;
+userRouter.get('/user/pending/requests', userAuth, async (req, res)=>{
+    try{
+        const loggedInUser = req.user;
+        const allRequest = await connectionRequestModel.find({
+            toUserId: loggedInUser._id,
+            status: 'interested'
+        }).populate("fromUserId", USER_SAFE_FIELDS)
 
-    try {
-        const users = await userModel.find({
-            emailId: userEmail
+        const data = allRequest.map((res)=> res.fromUserId)
+        res.json({
+            message : 'Requested fetched successfully!',
+            data
         })
-        // find() will give in array of obj
-        if (users.length === 0) {
-            res.status(404).send('User not found')
-        }
-        else {
-            res.send(users)
-        }
     }
-    catch (err) {
-        res.status(400).send('Something went wrg')
+    catch(err){
+        res.status(400).send('Error' + err)
     }
 })
 
-// Returns one matching user as an object, but findOne() does not guarantee it is the oldest.
-// To guarantee the oldest user, the schema must include createdAt and the query must sort by it ascending.
-userRouter.get('/user', userAuth, async (req, res) => {
-    const userEmail = req.body.emailId;
-    try {
-        const user = await userModel.findOne({
-            emailId: userEmail
+userRouter.get('/user/connections', userAuth, async (req, res)=>{
+    try{
+        const loggedInUser = req.user;
+
+        // A -> B and B -> A both are accpeted case but the users are changed so need to handle that 
+        // logged-in user can be on either side; check both fromUserId and toUserId.
+        const connectionRequests = await connectionRequestModel.find({
+            $or:[{
+                toUserId: loggedInUser._id,
+                status: 'accepted' 
+            },
+            {
+                fromUserId: loggedInUser._id,
+                status: 'accepted' 
+
+            }]
+            
+        // need to populate in both the cases coz we dont kn that who requested whom maybe the current user is receiver or sender wdk right!
+        }).populate("fromUserId", USER_SAFE_FIELDS).populate("toUserId", USER_SAFE_FIELDS)
+
+        // JUST NEED THE DATA OF THE USER NOT EVRYTHING RELATED TO CONNECTION EG Status, touserid etc etc 
+        const data = connectionRequests.map((row)=> {
+            // check to handle the profile of current user will not be shown and always show the profile of connected user simple :)
+            if(row.fromUserId.equals(loggedInUser._id)){
+                return row.toUserId
+            }
+            return row.fromUserId
         })
-        // as its not an array its just an object
-        if (!user) {
-            res.status(404).send('User not found')
-        }
-        else {
-            res.send(user)
-        }
+        res.json({
+            message : 'Connections fetched successfully!',
+            data
+        })
     }
-    catch (err) {
-        res.status(400).send('Something went wrg')
+    catch(err){
+        res.status(400).send('Error' + err)
     }
 })
 
-// Delete a user by ID from the request body: DELETE /user
-userRouter.delete('/user/', async (req, res) => {
-    const userId = req.body._id
-    try {
-        // can delete it like this as well findOneAndDelete({ _id: id }).
-        const deletedUser = await userModel.findByIdAndDelete(userId)
-
-        if (!deletedUser) {
-            return res.status(404).send('User not found')
-        }
-
-        res.send('User deleted successfully')
-    }
-    catch (err) {
-        res.status(400).send('Invalid user ID')
-    }
-})
-
-
-userRouter.patch('/user', userAuth, async (req, res) => {
-    try {
-        const { emailId, password, firstName, lastName, age, gender, avatar, about, bio, skills } = req.body
-
-        if (emailId !== undefined || password !== undefined) {
-            return res.status(400).send('Email and password cannot be changed through profile updates')
-        }
-
-        if (Object.keys(req.body).length === 0) {
-            return res.status(400).send('At least one profile field is required')
-        }
-
-        const allowedFields = ['firstName', 'lastName', 'age', 'gender', 'avatar', 'about', 'bio', 'skills']
-        const hasUnsupportedField = Object.keys(req.body).some(field => !allowedFields.includes(field) && field !== 'emailId' && field !== 'password')
-        if (hasUnsupportedField) {
-            return res.status(400).send('One or more profile fields cannot be updated')
-        }
-
-        const user = req.user
-        if (firstName !== undefined) user.firstName = firstName
-        if (lastName !== undefined) user.lastName = lastName
-        if (age !== undefined) user.age = age
-        if (gender !== undefined) user.gender = gender
-        if (avatar !== undefined) user.avatar = avatar
-        if (about !== undefined) user.about = about
-        if (bio !== undefined) user.bio = bio
-        if (skills !== undefined) user.skills = skills
-
-        await user.save()
-
-        const profile = user.toObject()
-        delete profile.password
-        return res.status(200).json({ message: 'Profile updated successfully', user: profile })
-    } catch (err) {
-        return res.status(400).send('Unable to update profile: ' + err.message)
-    }
-})
-
-
-//OPTIMZED 
-
-// app.patch('/user', async (req, res) => {
-//     const { _id, ...updates } = req.body
-
-//     try {
-//         const user = await userModel.findByIdAndUpdate(
-//             _id,
-//             updates,
-//             { new: true, runValidators: true }
-//         )
-
-//         if (!user) {
-//             return res.status(404).send('User not found')
-//         }
-
-//         res.send(user)
-//     } catch (err) {
-//         res.status(400).send('Invalid user data')
-//     }
-// })
-
-
-// PATCH WITH EMAIL  - use findOneAndUpdate 
-
-// app.patch('/user', async(req, res)=>{
-//     const emailId = req.body.emailId
-//     const data = req.body
-//     try{
-//         const user = await userModel.findOneAndUpdate({emailId}, data)
-//         res.send('User updated successfully')
-//     }
-//     catch(err){
-//         res.status(400).send('Something went wrg')
-//     }
-// })
-
-module.exports = { userRouter }
+module.exports = {userRouter}

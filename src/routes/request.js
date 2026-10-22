@@ -1,11 +1,13 @@
 const express = require('express');
-const connectionRequestRouter = express.Router();
+const requestRouter = express.Router();
 
 const { userAuth } = require('../middlewares/auth')
 const { connectionRequestModel } = require('../models/connectionRequest');
 const { userModel } = require('../models/user');
 
-connectionRequestRouter.post('/request/:status/:toUserId', userAuth, async (req, res) => {
+
+// sending the connection request
+requestRouter.post('/request/send/:status/:toUserId', userAuth, async (req, res) => {
     try {
 
         // grabbing all the values
@@ -65,7 +67,7 @@ connectionRequestRouter.post('/request/:status/:toUserId', userAuth, async (req,
         await request.save()
 
         res.json({
-            message: req.user.firstName  + status + toUser.firstName + 'successfully!',
+            message: req.user.firstName  +  status  + toUser.firstName + ' successfully!',
             request
         })
     } catch (err) {
@@ -73,4 +75,43 @@ connectionRequestRouter.post('/request/:status/:toUserId', userAuth, async (req,
     }
 })
 
-module.exports = { connectionRequestRouter }
+// received connection request
+requestRouter.post('/request/receive/:status/:requestId', userAuth, async (req, res)=>{
+    try{
+        const loggedInUser = req.user;
+        const {status, requestId} = req.params
+
+        // Corner cases
+        // 1. Validate status
+        // 2. Validate the requestID
+        // 3. The loggedUser must be toUserId
+        // 4. The Status must be always interested..coz then only it will go to other user to accept the request
+
+        const ALLOWEDSTATUS = ['accepeted', 'rejected']
+        if(ALLOWEDSTATUS.includes(status)){
+            return res.status(400).json({message: "Status not allowed!"})
+        }
+
+        const connectionRequest = await connectionRequestModel.findOne({
+            _id: requestId,
+            toUserId: loggedInUser._id,
+            status: 'interested'
+        })
+        if(!connectionRequest){
+            res.status(404).send('Connection request not found')
+        }
+
+        connectionRequest.status = status
+
+        const data = await connectionRequest.save()
+        res.json({
+            message: 'Connection request ' + status,
+            data
+        })
+
+    }catch(err){
+        res.status(400).send(err)
+    }
+})
+
+module.exports = { requestRouter }
