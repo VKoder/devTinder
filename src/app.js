@@ -6,7 +6,7 @@ const {authRouter} = require('./routes/auth')
 const {profileRouter} = require('./routes/profile')
 const {requestRouter} = require('./routes/request')
 const { userRouter } = require('./routes/user')
-
+const cors = require('cors')
 
 // Below app.use is ntg but a MIDDLEWARE for all the paths we have added a express.json ie its a reqhandler
 // Description : convert the request to readable js object and adds the object into .body 
@@ -14,6 +14,15 @@ app.use(express.json());
 
 // Makes the cookie into readable format when we do req.cookiee in rh
 app.use(cookieParcer())
+
+app.use(cors({
+    // whitelisting the frontend domain to allow the request
+     origin: [
+      "http://localhost:5173",
+      "http://192.168.1.4:5173",
+    ],
+    credentials: true
+}))
 
 app.use('/', authRouter);
 app.use('/', profileRouter)

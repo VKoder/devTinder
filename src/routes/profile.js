@@ -11,7 +11,7 @@ profileRouter.get('/users', userAuth, async (req, res) => {
     try {
         const users = await userModel.find({
             emailId: userEmail
-        })
+        }).select('-password')
         // find() will give in array of obj
         if (users.length === 0) {
             res.status(404).send('User not found')
@@ -35,7 +35,9 @@ profileRouter.get('/user', userAuth, async (req, res) => {
             res.status(404).send('User not found')
         }
         else {
-            res.send(user)
+            const profile = user.toObject()
+            delete profile.password
+            res.send(profile)
         }
     }
     catch (err) {
@@ -64,7 +66,7 @@ profileRouter.delete('/user/', async (req, res) => {
 
 profileRouter.patch('/user', userAuth, async (req, res) => {
     try {
-        const { emailId, password, firstName, lastName, age, gender, avatar, about, bio, skills } = req.body
+        const { emailId, password, firstName, lastName, age, gender, avatar, about, bio, skills, gallery } = req.body
 
         if (emailId !== undefined || password !== undefined) {
             return res.status(400).send('Email and password cannot be changed through profile updates')
@@ -74,7 +76,7 @@ profileRouter.patch('/user', userAuth, async (req, res) => {
             return res.status(400).send('At least one profile field is required')
         }
 
-        const allowedFields = ['firstName', 'lastName', 'age', 'gender', 'avatar', 'about', 'bio', 'skills']
+        const allowedFields = ['firstName', 'lastName', 'age', 'gender', 'avatar', 'about', 'bio', 'skills', 'gallery']
         const hasUnsupportedField = Object.keys(req.body).some(field => !allowedFields.includes(field) && field !== 'emailId' && field !== 'password')
         if (hasUnsupportedField) {
             return res.status(400).send('One or more profile fields cannot be updated')
@@ -89,6 +91,18 @@ profileRouter.patch('/user', userAuth, async (req, res) => {
         if (about !== undefined) user.about = about
         if (bio !== undefined) user.bio = bio
         if (skills !== undefined) user.skills = skills
+        if (gallery !== undefined) {
+            if (!Array.isArray(gallery)) {
+                return res.status(400).send('Gallery must be an array of photo URLs or { img: URL } objects')
+            }
+
+            const photoUrls = gallery.map(photo => typeof photo === 'string' ? photo : photo?.img)
+            if (!photoUrls.every(photoUrl => typeof photoUrl === 'string')) {
+                return res.status(400).send('Each gallery item must be a photo URL or an { img: URL } object')
+            }
+
+            user.gallery = photoUrls
+        }
 
         await user.save()
 

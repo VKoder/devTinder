@@ -53,12 +53,15 @@ authRouter.post('/login', async (req, res) => {
         if (isPasswordValid) {
             // async func anyday wkt takes user payload and secret key - here user is which we finded above not a model
             const token = await user.getJwt()
-            console.log('tooken',token)
 
             // key as token
             res.cookie('token', token)
 
-            res.send('User  logged in successfully')
+            // user is a Mongoose document. user.toObject() converts it into a regular JavaScript object so we can safely remove password before sending the user data in the response. Otherwise, the password hash could be exposed.
+            const userData = user.toObject()
+            delete userData.password
+
+            res.json({ message: 'User logged in successfully', user: userData })
         } else {
             throw new Error('Invalid user creds')
         }

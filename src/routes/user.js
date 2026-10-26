@@ -5,7 +5,7 @@ const { populate } = require('dotenv');
 const { userModel } = require('../models/user');
 const userRouter = express.Router();
 
-const USER_SAFE_FIELDS = "firstName lastName age gender avatar skills about bio"
+const USER_SAFE_FIELDS = "firstName lastName age gender avatar skills about bio gallery"
 
 userRouter.get('/user/pending/requests', userAuth, async (req, res) => {
     try {
@@ -15,10 +15,9 @@ userRouter.get('/user/pending/requests', userAuth, async (req, res) => {
             status: 'interested'
         }).populate("fromUserId", USER_SAFE_FIELDS)
 
-        const data = allRequest.map((res) => res.fromUserId)
         res.json({
             message: 'Requested fetched successfully!',
-            data
+            allRequest
         })
     }
     catch (err) {

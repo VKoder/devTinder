@@ -76,6 +76,14 @@ const userSchema = new mongoose.Schema({
             validator: skills => skills.length <= 10,
             message: 'A user cannot have more than 10 skills'
         }
+    },
+    gallery:{
+        type: [{type: String,trim:true}],
+        validate(value) {
+            if (!value.every(photoUrl => validator.isURL(photoUrl))) {
+                throw new Error('Every gallery photo must have a valid URL')
+            }
+        }
     }
 }, { timestamps: true },
 )
