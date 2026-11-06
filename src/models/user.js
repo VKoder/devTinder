@@ -88,7 +88,11 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true },
 )
 userSchema.methods.getJwt = async function () {
-    return jwt.sign({ _id: this._id }, 'AIDEV')
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+        throw new Error('JWT_SECRET is not defined in .env')
+    }
+    return jwt.sign({ _id: this._id }, jwtSecret)
 }
 
 

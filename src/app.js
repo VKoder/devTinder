@@ -32,11 +32,13 @@ app.use('/', userRouter)
 
 
  
+const port = process.env.PORT || 7777
+
 connectDB()
     .then(() => {
         console.log('DB is Successfully connected and then only will listen or start the server');
-        app.listen(7777, () => {
-            console.log('Running successfully on port 7777....')
+        app.listen(port, () => {
+            console.log(`Running successfully on port ${port}....`)
         })
     })
     .catch((err) => {

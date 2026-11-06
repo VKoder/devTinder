@@ -1,10 +1,10 @@
 const express = require('express');
 const requestRouter = express.Router();
-
+import "dotenv/config";
 const { userAuth } = require('../middlewares/auth')
 const { connectionRequestModel } = require('../models/connectionRequest');
 const { userModel } = require('../models/user');
-
+const {sendEmail} = require('../config/emailService')
 
 // sending the connection request
 requestRouter.post('/request/send/:status/:toUserId', userAuth, async (req, res) => {
@@ -65,7 +65,9 @@ requestRouter.post('/request/send/:status/:toUserId', userAuth, async (req, res)
 
 
         await request.save()
-
+        await sendEmail(process.env.SES_SENDER_EMAIL,
+      `You've got a new connection request from ${fromUserId}`,
+      "HEY U GOT NEW CONNECTION REQUEST")
         res.json({
             message: req.user.firstName  +  status  + toUser.firstName + ' successfully!',
             request
