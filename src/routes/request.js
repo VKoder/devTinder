@@ -1,6 +1,5 @@
 const express = require('express');
 const requestRouter = express.Router();
-import "dotenv/config";
 const { userAuth } = require('../middlewares/auth')
 const { connectionRequestModel } = require('../models/connectionRequest');
 const { userModel } = require('../models/user');
